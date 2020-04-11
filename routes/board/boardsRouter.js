@@ -1,6 +1,9 @@
 const { Router } = require('express');
 const boardService = require('./boardService');
 
+const asyncHandler = require('express-async-handler');
+const createError = require('http-errors');
+
 const { getAllBoards, getBoard, createBoard, updateBoard, deleteBoard } = boardService;
 
 const router = Router();
@@ -12,17 +15,17 @@ router.get('/', async (req, res) => {
 });
 
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', asyncHandler(async (req, res) => {
   const board = await getBoard(req.params.id);
 
-  if (board) {
-    res.send(board)
-  }
-  else {
-    res.status(404).send('Not found 404')
+
+
+  if (!board) {
+    throw createError(404, 'Not found board')
   }
 
-});
+    res.send(board)
+}));
 
 
 router.post('/', async (req, res) => {
@@ -32,11 +35,15 @@ router.post('/', async (req, res) => {
 });
 
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', asyncHandler(async (req, res) => {
   const board = await updateBoard(req.params.id);
 
+  if(!board) {
+    throw createError(404, 'Not found board')
+  }
+
   res.send(board)
-});
+}));
 
 
 router.delete('/:id', (req, res) => {
