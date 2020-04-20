@@ -1,5 +1,6 @@
 const {Router} = require('express');
 const userService = require('./userService');
+const User = require('./userModel');
 
 const asyncHandler = require('express-async-handler');
 const createError = require('http-errors');
@@ -9,18 +10,19 @@ const {getAllUsers, getUser, createUser, updateUser, deleteUser} = userService;
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const allUsers = await getAllUsers();
+  // const allUsers = await getAllUsers();
 
-   res.send(allUsers)
+const allUsers = await User.find({});
+
+  res.send(allUsers)
 });
 
 
-router.get('/:id', asyncHandler(async (req, res, next) => {
-  const user = await getUser(req.params.id);
-
+router.get('/:id', asyncHandler(async (req, res) => {
+  const user = await User.findOne({'id': req.params.id});
 
   if (!user) {
-    throw createError(404, 'User not found')
+    throw createError(404, 'User not found');
   }
 
   res.send(user)
@@ -30,7 +32,18 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 router.post('/', async (req, res) => {
   await createUser();
 
-  res.send('Create new user is dane')
+  const newUser = new User(
+    {
+      name: req.body.name,
+      login: req.body.login,
+      password: req.body.password}
+  );
+
+
+  await newUser.save();
+  console.log(newUser);
+  // res.send('Create new user is dane')
+  res.send(newUser)
 });
 
 
@@ -46,11 +59,13 @@ router.put('/:id', asyncHandler(async (req, res) => {
 
 
 router.delete('/:id', asyncHandler(async (req, res) => {
-  await deleteUser(req.params.id);
+  // await deleteUser(req.params.id);
 
-  // if (!updateUser) {
-  //   throw createError(404, 'User not found')
-  // }
+  const user = await User.findOne({'id': req.params.id});
+
+  if (!user) {
+    throw createError(404, 'User not found')
+  }
 
   res.send(`User with id ${req.params.id} was deleted`)
 }));
